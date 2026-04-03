@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>寶寶作息規劃表｜Sunny Parent</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+:root {
+  --night-bg: #e8ecf8;
+  --day-bg: #fff9f0;
+  --ritual-bg: #f3ecfb;
+  --sleep-color: #5b7fd4;
+  --ritual-color: #9b6dbd;
+  --nap-last-color: #e8734a;
+  --nap-color: #5ab88a;
+  --feed-color: #e8a030;
+  --night: #1a1f3a;
+  --text: #2a2a3e;
+  --text-light: #6b7280;
+  --border: #e5e7eb;
+  --white: #fff;
+  --radius: 12px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.09);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: #f2ede8;
+  color: var(--text);
+  min-height: 100vh;
+  padding: 20px 16px 80px;
+}
+
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { font-size: 19px; font-weight: 700; color: var(--night); }
+.header p { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+
+/* cards */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  max-width: 640px;
+  margin: 0 auto 16px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; color: var(--text-light);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--night); color: white;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* time inputs */
+.time-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.time-row:last-child { margin-bottom: 0; }
+.time-label { font-size: 13px; width: 88px; flex-shrink: 0; }
+.time-input {
+  flex: 1; height: 40px; border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 0 12px; font-size: 15px;
+  font-family: inherit; outline: none; background: #fafafa;
+  transition: border-color 0.2s;
+}
+.time-input:focus { border-color: var(--sleep-color); background: white; }
+
+/* timeline card */
+#tl-card { display: none; padding: 16px 16px 18px; }
+
+.tl-meta {
+  font-size: 12px; color: var(--text-light);
+  margin-bottom: 12px; line-height: 1.6;
+}
+
+/* hour labels */
+.hour-labels {
+  display: flex;
+  padding: 0 0 4px 0;
+  position: relative;
+}
+.hour-lbl {
+  flex: 1;
+  font-size: 9px;
+  color: #9ca3af;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* THE BAR */
+.bar-wrap {
+  position: relative;
+  height: 64px;
+  border-radius: 8px;
+  overflow: visible;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bar-bg-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bar-segment {
+  position: absolute;
+  top: 0; bottom: 0;
+}
+
+.bar-grid-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.bar-grid-line {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(0,0,0,0.07);
+}
+
+.bar-hit {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  cursor: crosshair;
+}
+
+/* blocks */
+.bar-block {
+  position: absolute;
+  top: 6px; bottom: 6px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: white;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.18);
+  transition: filter 0.1s, box-shadow 0.1s;
+  z-index: 2;
+}
+.bar-block:active, .bar-block.selected {
+  filter: brightness(1.12);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.28), 0 0 0 2px white;
+}
+.bar-block.nap-last { background: var(--nap-last-color); }
+.bar-block.nap      { background: var(--nap-color); }
+.bar-block.ritual   { background: var(--ritual-color); }
+
+/* feed marker */
+.feed-mk {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--feed-color);
+  cursor: pointer;
+  z-index: 3;
+  transition: width 0.1s;
+}
+.feed-mk.selected { width: 6px; box-shadow: 0 0 0 2px white, 0 0 0 4px var(--feed-color); }
+
+/* ghost */
+.drag-ghost {
+  position: absolute;
+  top: 6px; bottom: 6px;
+  border-radius: 5px;
+  opacity: 0.45;
+  pointer-events: none;
+  display: none;
+  z-index: 10;
+}
+
+/* hour labels bottom */
+.hour-labels-b {
+  display: flex;
+  padding: 4px 0 0;
+}
+
+/* edit popup */
+.edit-popup {
+  position: fixed;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 16px;
+  z-index: 999;
+  width: 230px;
+  display: none;
+}
+.edit-popup.show { display: block; }
+.popup-title {
+  font-size: 12px; font-weight: 700; color: var(--text-light);
+  margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+}
+.popup-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-light); font-size: 18px; line-height: 1;
+  padding: 0; margin: 0;
+}
+.popup-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.popup-row:last-child { margin-bottom: 0; }
+.popup-label { font-size: 12px; color: var(--text); width: 36px; flex-shrink: 0; }
+.popup-input {
+  flex: 1; height: 34px; border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 0 8px; font-size: 13px;
+  font-family: inherit; outline: none;
+}
+.popup-input:focus { border-color: var(--sleep-color); }
+.popup-del {
+  width: 100%; padding: 9px; border-radius: 7px;
+  background: #fee2e2; color: #b91c1c;
+  border: none; font-size: 13px; font-weight: 600;
+  font-family: inherit; cursor: pointer; margin-top: 4px;
+}
+.popup-del:hover { background: #fecaca; }
+.popup-apply {
+  width: 100%; padding: 9px; border-radius: 7px;
+  background: var(--night); color: white;
+  border: none; font-size: 13px; font-weight: 600;
+  font-family: inherit; cursor: pointer; margin-top: 4px;
+}
+.popup-apply:hover { background: #2d3561; }
+
+/* mode selector */
+#mode-card { display: none; }
+.mode-btns { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+.mode-btn {
+  padding: 10px 8px; border-radius: 9px;
+  border: 2px solid var(--border); background: #fafafa;
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text-light);
+}
+.mode-btn .mi { font-size: 18px; }
+.mode-btn.active { color: white; border-color: transparent; }
+.mode-btn.active.m-nap-last { background: var(--nap-last-color); }
+.mode-btn.active.m-nap      { background: var(--nap-color); }
+.mode-btn.active.m-feed     { background: var(--feed-color); }
+.mode-btn.active.m-erase    { background: #ef4444; }
+.mode-hint { font-size: 11px; color: var(--text-light); margin-top: 10px; text-align: center; min-height: 16px; }
+
+
+
+/* summary */
+#sum-card { display: none; }
+.sum-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+.sum-item { border-radius: 10px; padding: 12px 14px; }
+.sum-label { font-size: 11px; color: var(--text-light); margin-bottom: 2px; }
+.sum-val { font-size: 19px; font-weight: 700; }
+.sn { background: #eef0f8; } .sn .sum-val { color: var(--night); }
+.sd { background: #edfaf3; } .sd .sum-val { color: #1a7a4a; }
+.sr { background: #f3ecfb; } .sr .sum-val { color: var(--ritual-color); font-size: 14px; }
+.sf { background: #fff8ed; } .sf .sum-val { color: #a06010; }
+
+.action-row { display: flex; gap: 10px; margin-top: 14px; }
+.action-btn {
+  flex: 1; padding: 11px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; font-family: inherit; cursor: pointer; border: none;
+}
+.btn-reset  { background: #f3f4f6; color: var(--text); }
+.btn-print  { background: var(--night); color: white; }
+
+
+/* ── PRINT STYLES ── */
+@media print {
+  body { background: white; padding: 10px; }
+  .header, #mode-card, #sum-card, .edit-popup, .tooltip { display: none !important; }
+  .card { box-shadow: none; border: none; margin: 0; padding: 10px; }
+  #tl-card { display: block !important; }
+  .tl-meta { font-size: 13px; margin-bottom: 16px; }
+  .bar-wrap { height: 100px; }
+  .legend { margin-top: 16px; }
+  .print-header { display: block !important; }
+}
+.print-header {
+  display: none;
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 14px; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-light); }
+.leg-dot { width: 11px; height: 11px; border-radius: 3px; }
+.leg-line { width: 11px; height: 3px; border-radius: 2px; background: var(--feed-color); }
+
+/* tooltip */
+.tooltip {
+  position: fixed; background: var(--night); color: white;
+  font-size: 11px; padding: 4px 8px; border-radius: 6px;
+  pointer-events: none; z-index: 1000; display: none; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌙 寶寶作息規劃表</h1>
+  <p>Sunny Parent｜先設定晝夜節律，再在時間軸上安排作息</p>
+</div>
+
+<!-- STEP 1 -->
+<div class="card">
+  <div class="card-title"><span class="step-num">1</span>確定晝夜節律</div>
+  <div class="time-row">
+    <span class="time-label">☀️ 早上起床</span>
+    <input type="time" class="time-input" id="waketime" value="06:00" onchange="buildTimeline()">
+  </div>
+  <div class="time-row">
+    <span class="time-label">🌙 夜間入睡</span>
+    <input type="time" class="time-input" id="bedtime" value="20:00" onchange="buildTimeline()">
+  </div>
+</div>
+
+<!-- TIMELINE CARD -->
+<div class="card" id="tl-card">
+  <div class="card-title">24小時作息軸</div>
+  <div class="tl-meta" id="tl-meta"></div>
+
+  <div class="hour-labels" id="hlabels-top"></div>
+
+  <div class="bar-wrap" id="bar-wrap">
+    <div class="bar-bg-layer" id="bar-bg"></div>
+    <div class="bar-grid-layer" id="bar-grid"></div>
+    <div class="bar-hit" id="bar-hit"></div>
+    <!-- blocks rendered here by JS -->
+    <div class="drag-ghost" id="ghost"></div>
+  </div>
+
+  <div class="hour-labels" id="hlabels-bot"></div>
+
+  <div class="legend">
+    <div class="leg-item"><div class="leg-dot" style="background:#dde4f5"></div>夜間時段</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--ritual-color)"></div>睡前儀式</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--nap-last-color)"></div>最後小睡</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--nap-color)"></div>白天小睡</div>
+    <div class="leg-item"><div class="leg-line"></div>餵奶</div>
+  </div>
+
+</div>
+
+<!-- MODE CARD -->
+<div class="card" id="mode-card">
+  <div class="card-title"><span class="step-num">2</span>選擇模式，在時間軸上安排</div>
+  <div class="mode-btns">
+    <button class="mode-btn m-nap-last" id="btn-nap-last" onclick="setMode('nap-last')">
+      <span class="mi">🟧</span>最後一次小睡
+    </button>
+    <button class="mode-btn m-nap" id="btn-nap" onclick="setMode('nap')">
+      <span class="mi">🟩</span>白天小睡
+    </button>
+    <button class="mode-btn m-feed" id="btn-feed" onclick="setMode('feed')">
+      <span class="mi">🍼</span>餵奶（點一下）
+    </button>
+    <button class="mode-btn m-erase" id="btn-erase" onclick="setMode('erase')">
+      <span class="mi">🗑</span>刪除
+    </button>
+  </div>
+  <div class="mode-hint" id="mode-hint">選擇模式後，直接在時間軸上操作</div>
+</div>
+
+<!-- SUMMARY -->
+<div class="card" id="sum-card">
+  <div class="card-title">📊 作息統計</div>
+  <div class="print-header" id="print-header"></div>
+  <div class="sum-grid" id="sum-grid"></div>
+  <div class="action-row">
+    <button class="action-btn btn-reset" onclick="resetAll()">重新開始</button>
+    <button class="action-btn btn-print" onclick="doPrint()">🖨 列印</button>
+  </div>
+  <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:8px;">
+    📱 手機用戶：規劃完成後截圖保存即可
+  </div>
+</div>
+
+<!-- EDIT POPUP -->
+<div class="edit-popup" id="edit-popup">
+  <div class="popup-title">
+    <span id="popup-title-text">編輯</span>
+    <button class="popup-close" onclick="closePopup()">×</button>
+  </div>
+  <div id="popup-body"></div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let wakeMins = 6*60, bedMins = 20*60;
+let blocks   = [];   // {id, type:'nap-last'|'nap', start, end}
+let feeds    = [];   // {id, time}
+let ritual   = null; // {id, start, end}  — editable, defaults to bed-60 → bed
+let idC = 0;
+const uid = () => ++idC;
+let mode = null;
+let drag = null;   // {active, startMins, curMins, type}
+let selectedId = null;
+
+// ─────────────────────────────────────────────
+// TIME UTILS
+// ─────────────────────────────────────────────
+const mod24   = m => ((m % 1440) + 1440) % 1440;
+const toMins  = t => { if (!t) return null; const [h,m] = t.split(':').map(Number); return h*60+m; };
+const toHHMM  = m => { m=mod24(m); return `${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`; };
+const fmtTime = m => { m=mod24(m); const h=Math.floor(m/60),mn=m%60; return `${h%12||12}:${String(mn).padStart(2,'0')} ${h<12?'AM':'PM'}`; };
+const fmtDur  = m => { if(!m||m<=0) return '—'; const h=Math.floor(m/60),mn=m%60; return h&&mn?`${h}小時${mn}分`:h?`${h}小時`:`${mn}分`; };
+
+// clock minutes → fraction along 24h axis (wake = 0, wake+24h = 1)
+const clockToFrac = m => mod24(m - wakeMins) / 1440;
+// fraction → clock minutes (snapped to 15)
+const fracToClock = f => mod24(wakeMins + Math.round(f * 1440 / 15) * 15);
+
+// ─────────────────────────────────────────────
+// BUILD TIMELINE (called on time input change)
+// ─────────────────────────────────────────────
+function buildTimeline() {
+  wakeMins = toMins(document.getElementById('waketime').value) ?? 6*60;
+  bedMins  = toMins(document.getElementById('bedtime').value)  ?? 20*60;
+
+  // init ritual block if not yet created, or re-anchor to new bedtime
+  if (!ritual) {
+    ritual = { id: uid(), start: mod24(bedMins - 60), end: bedMins };
+  } else {
+    // keep duration but move to new bedtime
+    const dur = mod24(ritual.end - ritual.start);
+    ritual.end   = bedMins;
+    ritual.start = mod24(bedMins - dur);
+  }
+
+  document.getElementById('tl-card').style.display   = 'block';
+  document.getElementById('mode-card').style.display = 'block';
+  document.getElementById('sum-card').style.display  = 'block';
+
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function renderAll() {
+  renderBg();
+  renderHourLabels();
+  renderBlocks();
+  renderMeta();
+  renderSummary();
+}
+
+function renderBg() {
+  const bg = document.getElementById('bar-bg');
+  const grid = document.getElementById('bar-grid');
+  bg.innerHTML = ''; grid.innerHTML = '';
+
+  const dayFrac   = clockToFrac(bedMins);           // 0 → bed
+  const ritualFrac = clockToFrac(bedMins - 60);     // bed-1h
+  const wrapFrac  = clockToFrac(bedMins - 60);
+
+  // day segment only (no ritual bg - ritual is now a block)
+  addSeg(bg, 0, dayFrac, '#fff9f0');
+  // night segment
+  addSeg(bg, dayFrac, 1, '#dde4f5');
+
+  // grid lines every hour
+  for (let i = 1; i < 24; i++) {
+    const d = document.createElement('div');
+    d.className = 'bar-grid-line';
+    d.style.left = (i/24*100) + '%';
+    grid.appendChild(d);
+  }
+}
+
+function addSeg(parent, f1, f2, color) {
+  if (f2 <= f1) return;
+  const d = document.createElement('div');
+  d.className = 'bar-segment';
+  d.style.left  = (f1*100) + '%';
+  d.style.width = ((f2-f1)*100) + '%';
+  d.style.background = color;
+  parent.appendChild(d);
+}
+
+function renderHourLabels() {
+  ['hlabels-top','hlabels-bot'].forEach(id => {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    for (let i = 0; i < 25; i++) {
+      const h = mod24(wakeMins + i*60) / 60 | 0;
+      const d = document.createElement('div');
+      d.className = 'hour-lbl';
+      d.style.position = 'absolute';
+      d.style.left = (i/24*100) + '%';
+      d.style.transform = 'translateX(-50%)';
+      const ampm = h < 12 ? 'AM' : 'PM';
+      d.textContent = `${h%12||12}${ampm}`;
+      el.appendChild(d);
+    }
+    el.style.position = 'relative';
+    el.style.height = '18px';
+  });
+}
+
+function renderBlocks() {
+  // remove old block/feed elements
+  document.querySelectorAll('.bar-block,.feed-mk').forEach(e => e.remove());
+
+  const wrap = document.getElementById('bar-wrap');
+
+  // ritual block
+  if (ritual) {
+    const dur = mod24(ritual.end - ritual.start);
+    const sf  = clockToFrac(ritual.start);
+    const wf  = dur / 1440;
+    const el  = document.createElement('div');
+    el.className = `bar-block ritual${selectedId===ritual.id?' selected':''}`;
+    el.style.left  = (sf*100) + '%';
+    el.style.width = (wf*100) + '%';
+    el.dataset.id  = ritual.id;
+    const barW = wrap.offsetWidth;
+    if (wf * barW > 40) el.textContent = '🛁 睡前儀式';
+    el.addEventListener('pointerdown', e => { e.stopPropagation(); onRitualTap(e); });
+    wrap.appendChild(el);
+  }
+
+  // user blocks
+  blocks.forEach(b => {
+    const dur = mod24(b.end - b.start);
+    if (dur < 5) return;
+    const sf = clockToFrac(b.start);
+    const wf = dur / 1440;
+    const el = document.createElement('div');
+    el.className = `bar-block ${b.type}${selectedId===b.id?' selected':''}`;
+    el.style.left  = (sf*100) + '%';
+    el.style.width = (wf*100) + '%';
+    el.dataset.id  = b.id;
+    const barW = wrap.offsetWidth;
+    if (wf * barW > 40) el.textContent = b.type==='nap-last' ? '最後小睡' : '小睡';
+    el.addEventListener('pointerdown', e => { e.stopPropagation(); onBlockTap(b.id, e); });
+    wrap.appendChild(el);
+  });
+
+  // feed markers
+  feeds.forEach(f => {
+    const el = document.createElement('div');
+    el.className = `feed-mk${selectedId===f.id?' selected':''}`;
+    el.style.left = (clockToFrac(f.time)*100) + '%';
+    el.dataset.id = f.id;
+    el.addEventListener('pointerdown', e => { e.stopPropagation(); onFeedTap(f.id, e); });
+    wrap.appendChild(el);
+  });
+}
+
+function renderMeta() {
+  const nightDur = mod24(wakeMins - bedMins);
+  const ritualStr = ritual ? fmtTime(ritual.start) : fmtTime(bedMins-60);
+  document.getElementById('tl-meta').innerHTML =
+    `☀️ <b>${fmtTime(wakeMins)}</b> 起床 &nbsp;｜&nbsp; 🛁 <b>${ritualStr}</b> 睡前儀式 &nbsp;｜&nbsp; 🌙 <b>${fmtTime(bedMins)}</b> 入睡 &nbsp;｜&nbsp; 夜眠 <b>${fmtDur(nightDur)}</b>`;
+}
+
+
+
+function renderSummary() {
+  const nightDur  = mod24(wakeMins - bedMins);
+  const totalNap  = blocks.reduce((s,b) => s + mod24(b.end-b.start), 0);
+  const ritualStr = ritual ? fmtTime(ritual.start) : '—';
+  document.getElementById('sum-grid').innerHTML = `
+    <div class="sum-item sn"><div class="sum-label">🌙 夜間睡眠</div><div class="sum-val">${fmtDur(nightDur)}</div></div>
+    <div class="sum-item sd"><div class="sum-label">☀️ 小睡合計</div><div class="sum-val">${totalNap?fmtDur(totalNap):'—'}</div></div>
+    <div class="sum-item sr"><div class="sum-label">🛁 睡前儀式開始</div><div class="sum-val">${ritualStr}</div></div>
+    <div class="sum-item sf"><div class="sum-label">🍼 餵奶次數</div><div class="sum-val">${feeds.length||'—'}</div></div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// MODE
+// ─────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  closePopup();
+  selectedId = null;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  const map = {'nap-last':'btn-nap-last','nap':'btn-nap','feed':'btn-feed','erase':'btn-erase'};
+  document.getElementById(map[m])?.classList.add('active');
+  const hints = {
+    'nap-last': '拖拉畫出最後一次小睡的時間段',
+    'nap':      '拖拉畫出白天小睡的時間段',
+    'feed':     '在時間軸上點一下，標記餵奶時間點',
+    'erase':    '點擊色塊或餵奶標記來刪除'
+  };
+  document.getElementById('mode-hint').textContent = hints[m] || '';
+  document.getElementById('bar-hit').style.cursor =
+    m==='feed' ? 'crosshair' : m==='erase' ? 'pointer' : 'col-resize';
+  renderBlocks();
+}
+
+// ─────────────────────────────────────────────
+// DRAG on bar-hit
+// ─────────────────────────────────────────────
+const hitEl = document.getElementById('bar-hit');
+const ghostEl = document.getElementById('ghost');
+const tipEl   = document.getElementById('tooltip');
+
+function getBarFrac(clientX) {
+  const rect = document.getElementById('bar-wrap').getBoundingClientRect();
+  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+}
+
+hitEl.addEventListener('pointerdown', e => {
+  if (!mode || mode==='erase') return;
+  const f = getBarFrac(e.clientX);
+  const m = fracToClock(f);
+
+  if (mode==='feed') {
+    feeds.push({id:uid(), time:m});
+    renderAll();
+    return;
+  }
+  // start drag
+  drag = {startMins: m, curMins: m, type: mode};
+  hitEl.setPointerCapture(e.pointerId);
+  ghostEl.style.background = mode==='nap-last' ? 'var(--nap-last-color)' : 'var(--nap-color)';
+  ghostEl.style.display = 'block';
+  updateGhost(m, m);
+  e.preventDefault();
+});
+
+hitEl.addEventListener('pointermove', e => {
+  const f = getBarFrac(e.clientX);
+  const m = fracToClock(f);
+
+  if (drag) {
+    drag.curMins = m;
+    updateGhost(drag.startMins, m);
+    const s = Math.min(drag.startMins, m), en = Math.max(drag.startMins, m);
+    showTip(e.clientX, e.clientY, `${fmtTime(s)} – ${fmtTime(en)}  ${fmtDur(mod24(en-s))}`);
+  } else {
+    showTip(e.clientX, e.clientY, fmtTime(m));
+  }
+  e.preventDefault();
+});
+
+hitEl.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const s  = mod24(Math.min(drag.startMins, drag.curMins));
+  const en = mod24(Math.max(drag.startMins, drag.curMins));
+  if (mod24(en-s) >= 15) {
+    blocks.push({id:uid(), type:drag.type, start:s, end:en});
+  }
+  drag = null;
+  ghostEl.style.display = 'none';
+  hideTip();
+  renderAll();
+  e.preventDefault();
+});
+
+hitEl.addEventListener('pointercancel', () => {
+  drag = null; ghostEl.style.display='none'; hideTip();
+});
+
+hitEl.addEventListener('pointerleave', () => { if(!drag) hideTip(); });
+
+function updateGhost(a, b) {
+  const s  = Math.min(a, b), en = Math.max(a, b);
+  const sf = clockToFrac(s), wf = mod24(en-s)/1440;
+  ghostEl.style.left  = (sf*100)+'%';
+  ghostEl.style.width = (wf*100)+'%';
+}
+
+function showTip(x, y, t) {
+  tipEl.textContent = t; tipEl.style.display='block';
+  tipEl.style.left  = (x+12)+'px';
+  tipEl.style.top   = (y-30)+'px';
+}
+function hideTip() { tipEl.style.display='none'; }
+
+// ─────────────────────────────────────────────
+// TAP on existing block → edit popup
+// ─────────────────────────────────────────────
+function onRitualTap(e) {
+  if (mode==='erase') return; // ritual cannot be deleted
+  selectedId = ritual.id;
+  renderBlocks();
+  document.getElementById('popup-title-text').textContent = '編輯：睡前儀式';
+  document.getElementById('popup-body').innerHTML = `
+    <div class="popup-row">
+      <span class="popup-label">開始</span>
+      <input class="popup-input" type="time" id="pe-ritual-start" value="${toHHMM(ritual.start)}">
+    </div>
+    <div class="popup-row">
+      <span class="popup-label">結束</span>
+      <input class="popup-input" type="time" id="pe-ritual-end" value="${toHHMM(ritual.end)}">
+    </div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:6px;">預設為入睡前1小時，可依需求調整</div>
+    <button class="popup-apply" onclick="applyRitual()">✓ 套用</button>
+    <button class="popup-apply" style="background:#e8ecf8;color:var(--night);margin-top:4px;" onclick="resetRitual()">↺ 還原預設</button>
+  `;
+  showPopup(e.clientX, e.clientY);
+}
+
+function applyRitual() {
+  const s = toMins(document.getElementById('pe-ritual-start').value);
+  const en = toMins(document.getElementById('pe-ritual-end').value);
+  if (s !== null) ritual.start = s;
+  if (en !== null) ritual.end = en;
+  closePopup(); selectedId=null; renderAll();
+}
+
+function resetRitual() {
+  ritual.start = mod24(bedMins - 60);
+  ritual.end   = bedMins;
+  closePopup(); selectedId=null; renderAll();
+}
+
+function onBlockTap(id, e) {
+  if (mode==='erase') { blocks=blocks.filter(b=>b.id!==id); renderAll(); return; }
+  selectedId = id;
+  renderBlocks();
+  const b = blocks.find(x=>x.id===id);
+  if (!b) return;
+  const label = b.type==='nap-last' ? '最後一次小睡' : '白天小睡';
+  document.getElementById('popup-title-text').textContent = `編輯：${label}`;
+  document.getElementById('popup-body').innerHTML = `
+    <div class="popup-row">
+      <span class="popup-label">開始</span>
+      <input class="popup-input" type="time" id="pe-start" value="${toHHMM(b.start)}">
+    </div>
+    <div class="popup-row">
+      <span class="popup-label">結束</span>
+      <input class="popup-input" type="time" id="pe-end" value="${toHHMM(b.end)}">
+    </div>
+    <button class="popup-apply" onclick="applyBlock(${id})">✓ 套用</button>
+    <button class="popup-del" onclick="deleteBlock(${id})">🗑 刪除</button>
+  `;
+  showPopup(e.clientX, e.clientY);
+}
+
+function onFeedTap(id, e) {
+  if (mode==='erase') { feeds=feeds.filter(f=>f.id!==id); renderAll(); return; }
+  selectedId = id;
+  renderBlocks();
+  const f = feeds.find(x=>x.id===id);
+  if (!f) return;
+  document.getElementById('popup-title-text').textContent = '編輯：餵奶時間';
+  document.getElementById('popup-body').innerHTML = `
+    <div class="popup-row">
+      <span class="popup-label">時間</span>
+      <input class="popup-input" type="time" id="pe-feed" value="${toHHMM(f.time)}">
+    </div>
+    <button class="popup-apply" onclick="applyFeed(${id})">✓ 套用</button>
+    <button class="popup-del" onclick="deleteFeed(${id})">🗑 刪除</button>
+  `;
+  showPopup(e.clientX, e.clientY);
+}
+
+function applyBlock(id) {
+  const b = blocks.find(x=>x.id===id);
+  if (!b) return;
+  b.start = toMins(document.getElementById('pe-start').value) ?? b.start;
+  b.end   = toMins(document.getElementById('pe-end').value)   ?? b.end;
+  closePopup(); selectedId=null; renderAll();
+}
+function deleteBlock(id) { blocks=blocks.filter(b=>b.id!==id); closePopup(); selectedId=null; renderAll(); }
+function applyFeed(id) {
+  const f = feeds.find(x=>x.id===id);
+  if (!f) return;
+  f.time = toMins(document.getElementById('pe-feed').value) ?? f.time;
+  closePopup(); selectedId=null; renderAll();
+}
+function deleteFeed(id) { feeds=feeds.filter(f=>f.id!==id); closePopup(); selectedId=null; renderAll(); }
+
+function showPopup(cx, cy) {
+  const p = document.getElementById('edit-popup');
+  p.classList.add('show');
+  // position near tap
+  const pw = 230, ph = 180;
+  let x = cx + 12, y = cy - 20;
+  if (x + pw > window.innerWidth)  x = cx - pw - 12;
+  if (y + ph > window.innerHeight) y = window.innerHeight - ph - 10;
+  if (y < 8) y = 8;
+  p.style.left = x + 'px';
+  p.style.top  = y + 'px';
+}
+function closePopup() {
+  document.getElementById('edit-popup').classList.remove('show');
+  selectedId = null;
+  renderBlocks();
+}
+
+// close popup on outside tap
+document.addEventListener('pointerdown', e => {
+  const p = document.getElementById('edit-popup');
+  if (p.classList.contains('show') && !p.contains(e.target) && !e.target.closest('.bar-block,.feed-mk')) {
+    closePopup();
+  }
+});
+
+// ─────────────────────────────────────────────
+// COPY + RESET
+// ─────────────────────────────────────────────
+function doPrint() {
+  const nd = mod24(wakeMins - bedMins);
+  const ritualStr = ritual ? fmtTime(ritual.start) : '—';
+  const totalNap  = blocks.reduce((s,b) => s + mod24(b.end-b.start), 0);
+
+  // hour labels — every 2 hours, no duplicates
+  let hoursHTML = '';
+  for (let i = 0; i <= 24; i += 2) {
+    const clockH = mod24(wakeMins + i*60) / 60 | 0;
+    const ampm = clockH < 12 ? 'AM' : 'PM';
+    const hh = clockH % 12 || 12;
+    const pct = (i / 24 * 100).toFixed(3);
+    // skip last label if it duplicates first
+    if (i === 24) continue;
+    hoursHTML += `<div style="position:absolute;left:${pct}%;transform:translateX(-50%);font-size:11px;color:#888;white-space:nowrap;">${hh}${ampm}</div>`;
+  }
+
+  // grid lines every 2 hours
+  let gridHTML = '';
+  for (let i = 0; i <= 24; i += 2) {
+    const pct = (i / 24 * 100).toFixed(3);
+    gridHTML += `<div style="position:absolute;top:0;bottom:0;left:${pct}%;width:1px;background:rgba(0,0,0,0.1);"></div>`;
+  }
+
+  // background bands
+  const dayPct   = (clockToFrac(bedMins) * 100).toFixed(3);
+  const nightPct = (100 - parseFloat(dayPct)).toFixed(3);
+
+  // ritual block
+  let blocksHTML = '';
+  if (ritual) {
+    const sf  = (clockToFrac(ritual.start) * 100).toFixed(3);
+    const wf  = (mod24(ritual.end - ritual.start) / 1440 * 100).toFixed(3);
+    const dur = fmtDur(mod24(ritual.end - ritual.start));
+    const s   = fmtTime(ritual.start), e = fmtTime(ritual.end);
+    blocksHTML += `
+      <div style="position:absolute;top:8px;bottom:8px;left:${sf}%;width:${wf}%;
+        background:#9b6dbd;border-radius:6px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;overflow:hidden;padding:2px 4px;">
+        <div style="color:white;font-size:12px;font-weight:700;white-space:nowrap;">🛁 睡前儀式</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:10px;white-space:nowrap;">${s}–${e}</div>
+      </div>`;
+  }
+
+  // user blocks
+  const typeColor = {'nap-last':'#e8734a','nap':'#5ab88a'};
+  const typeLabel = {'nap-last':'最後小睡','nap':'小睡'};
+  blocks.forEach(b => {
+    const sf  = (clockToFrac(b.start) * 100).toFixed(3);
+    const wf  = (mod24(b.end - b.start) / 1440 * 100).toFixed(3);
+    const dur = fmtDur(mod24(b.end - b.start));
+    const s   = fmtTime(b.start), e = fmtTime(b.end);
+    blocksHTML += `
+      <div style="position:absolute;top:8px;bottom:8px;left:${sf}%;width:${wf}%;
+        background:${typeColor[b.type]};border-radius:6px;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;overflow:hidden;padding:2px 4px;">
+        <div style="color:white;font-size:12px;font-weight:700;white-space:nowrap;">${typeLabel[b.type]}</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:10px;white-space:nowrap;">${s}–${e}</div>
+        <div style="color:rgba(255,255,255,0.75);font-size:9px;white-space:nowrap;">${dur}</div>
+      </div>`;
+  });
+
+  // feed markers
+  feeds.forEach(f => {
+    const sf = (clockToFrac(f.time) * 100).toFixed(3);
+    blocksHTML += `
+      <div style="position:absolute;top:0;bottom:0;left:${sf}%;width:4px;
+        background:#e8a030;border-radius:2px;z-index:5;"></div>
+      <div style="position:absolute;top:-18px;left:${sf}%;transform:translateX(-50%);
+        font-size:9px;color:#e8a030;white-space:nowrap;">${fmtTime(f.time)}</div>`;
+  });
+
+  // legend
+  const legends = [
+    {color:'#dde4f5',label:'夜間時段'},
+    {color:'#9b6dbd',label:'睡前儀式'},
+    {color:'#e8734a',label:'最後小睡'},
+    {color:'#5ab88a',label:'白天小睡'},
+    {color:'#e8a030',label:'餵奶'},
+  ];
+  const legHTML = legends.map(l =>
+    `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:18px;">
+      <span style="display:inline-block;width:14px;height:14px;background:${l.color};border-radius:3px;flex-shrink:0;"></span>
+      <span style="font-size:12px;color:#555;">${l.label}</span>
+    </span>`
+  ).join('');
+
+  // stats
+  const statsData = [
+    {label:'🌙 夜間睡眠', val: fmtDur(nd)},
+    {label:'☀️ 小睡合計', val: totalNap ? fmtDur(totalNap) : '—'},
+    {label:'🛁 睡前儀式', val: ritualStr},
+    {label:'🍼 餵奶次數', val: feeds.length ? feeds.length + ' 次' : '—'},
+  ];
+  const statsHTML = statsData.map(s =>
+    `<div style="flex:1;background:#f8f8f8;border-radius:8px;padding:10px 14px;">
+      <div style="font-size:11px;color:#888;margin-bottom:3px;">${s.label}</div>
+      <div style="font-size:20px;font-weight:700;color:#1a1f3a;">${s.val}</div>
+    </div>`
+  ).join('');
+
+  const html = `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>寶寶作息規劃表｜Sunny Parent</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: white;
+    padding: 28px 36px;
+    color: #2a2a3e;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page { size: A4 landscape; margin: 15mm; }
+  @media print {
+    body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head><body>
+
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+  <div style="font-size:20px;font-weight:700;color:#1a1f3a;">🌙 寶寶作息規劃表</div>
+  <div style="font-size:12px;color:#aaa;">Sunny Parent｜sunnyparent.com</div>
+</div>
+
+<!-- 列印提示（螢幕看得到，列印時隱藏） -->
+<div style="font-size:11px;color:#e8734a;margin-bottom:10px;padding:6px 12px;background:#fff5f0;border-radius:6px;border:1px solid #fde0d0;" class="no-print">
+  ⚠️ 列印前請在設定中勾選「Background graphics（背景圖形）」，色塊才會顯示
+</div>
+
+<!-- META -->
+<div style="font-size:13px;color:#555;margin-bottom:20px;line-height:1.8;
+  background:#f5f5f5;border-radius:8px;padding:10px 16px;">
+  ☀️ 起床 <strong>${fmtTime(wakeMins)}</strong>
+  &nbsp;&nbsp;🛁 睡前儀式 <strong>${ritualStr}</strong>
+  &nbsp;&nbsp;🌙 入睡 <strong>${fmtTime(bedMins)}</strong>
+  &nbsp;&nbsp;夜眠 <strong>${fmtDur(nd)}</strong>
+  &nbsp;&nbsp;小睡合計 <strong>${totalNap ? fmtDur(totalNap) : '—'}</strong>
+</div>
+
+<!-- HOUR LABELS TOP -->
+<div style="position:relative;height:20px;margin-bottom:4px;">${hoursHTML}</div>
+
+<!-- TIMELINE BAR -->
+<div style="position:relative;height:100px;border-radius:10px;overflow:hidden;
+  border:1.5px solid rgba(0,0,0,0.1);">
+  <!-- day bg -->
+  <div style="position:absolute;top:0;bottom:0;left:0;width:${dayPct}%;background:#fff9f0;"></div>
+  <!-- night bg -->
+  <div style="position:absolute;top:0;bottom:0;left:${dayPct}%;width:${nightPct}%;background:#dde4f5;"></div>
+  <!-- grid -->
+  ${gridHTML}
+  <!-- blocks -->
+  ${blocksHTML}
+</div>
+
+<!-- HOUR LABELS BOTTOM -->
+<div style="position:relative;height:20px;margin-top:4px;margin-bottom:20px;">${hoursHTML}</div>
+
+<!-- LEGEND -->
+<div style="margin-bottom:20px;">${legHTML}</div>
+
+<!-- STATS -->
+<div style="display:flex;gap:10px;">${statsHTML}</div>
+
+<script>window.onload = function(){ window.print(); }<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=1100,height=650');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+  } else {
+    alert('請允許彈出視窗（pop-up），或直接使用瀏覽器列印功能。');
+  }
+}
+
+
+function resetAll() {
+  blocks=[]; feeds=[]; selectedId=null; mode=null;
+  ritual = { id: uid(), start: mod24(bedMins - 60), end: bedMins };
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mode-hint').textContent='選擇模式後，直接在時間軸上操作';
+  document.getElementById('bar-hit').style.cursor='crosshair';
+  closePopup();
+  renderAll();
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  buildTimeline();
+  window.addEventListener('resize', renderAll);
+});
+</script>
+</body>
+</html>
